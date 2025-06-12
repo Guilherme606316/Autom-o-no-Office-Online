@@ -1,0 +1,13 @@
+<datalist id="sugestoes"></option>
+	<option value="UNID."></option>
+	<option value="CX"></option>
+	<option value="SC"></option>
+	<option value="LT"></option>
+	<option value="RL"></option>
+	<option value="M²"></option>
+	<option value="M"></option>
+</datalist>
+
+<div id="formContainer">
+	<!-- O formulário será gerado dinamicamente aqui pelo JavaScript -->
+</div>
