@@ -1,0 +1,17 @@
+<datalist id="tipos">
+	<option value="Execução">
+	<option>
+	<option value="Vistoria">
+	<option>
+	<option value="Continuar">
+	<option>
+	<option value="Execução/Vistoria">
+	<option>
+</datalist>
+
+<div>
+	<button id="btnCadastrar">Cadastrar Pendência</button>
+	<button id="btnAtualizar">Atualizar Pendências</button>
+	<div id="inlineForm"></div>
+	<div id="status" class="form-msg"></div>
+</div>
