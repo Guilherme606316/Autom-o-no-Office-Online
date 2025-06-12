@@ -1,0 +1,41 @@
+/* styles.css */
+/* Estilo básico para inputs e listas suspensas de sugestões */
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+}
+label {
+    display: block;
+    margin-top: 10px;
+}
+input, select, datalist {
+    width: 100%;
+    padding: 8px;
+    margin-top: 4px;
+    box-sizing: border-box;
+}
+input[type="date"] {
+    /* Para garantir dd/mm/yyyy, mas usar máscara via JS */
+}
+button {
+    margin-top: 15px;
+    padding: 10px 20px;
+    font-size: 1em;
+}
+ul.suggestions {
+    border: 1px solid #ccc;
+    max-height: 150px;
+    overflow-y: auto;
+    position: absolute;
+    background: white;
+    list-style: none;
+    margin-top: 0;
+    padding-left: 0;
+}
+ul.suggestions li {
+    padding: 5px;
+    cursor: pointer;
+}
+ul.suggestions li:hover {
+    background: #eee;
+}
