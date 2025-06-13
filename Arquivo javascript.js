@@ -4,7 +4,7 @@ Office.onReady(async (info) => {
     await Word.run(async (context) => {
       const body = context.document.body;
       const hoje = new Date().toLocaleDateString("pt-BR");
-      const searchText = `CONSTRUTORA PORTO - |Pintura Demarcação Viária| Forro Gípseos| Drywall| - ${hoje}`;
+      const searchText = `Empresa construção - |Pintura Demarcação Viária| Forro Gípseos| Drywall| - ${hoje}`;
       const results = body.search(searchText, { matchCase: false });
       results.load("items");
       await context.sync();
