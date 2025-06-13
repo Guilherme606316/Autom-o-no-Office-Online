@@ -4,14 +4,16 @@ Office.onReady(async (info) => {
     await Word.run(async (context) => {
       const body = context.document.body;
       const hoje = new Date().toLocaleDateString("pt-BR");
-      const searchText = `Empresa construção - |Pintura Demarcação Viária| Forro Gípseos| Drywall| - ${hoje}`;
+      const diaSemanaRaw = new Date().toLocaleDateString("pt-BR", { weekday: "long" });
+      const diaSemana = diaSemanaRaw.charAt(0).toUpperCase() + diaSemanaRaw.slice(1);
+      const searchText = `Empresa construção - |Pintura Demarcação Viária| Forro Gípseos| Drywall| ${diaSemana} - ${hoje}`;
       const results = body.search(searchText, { matchCase: false });
       results.load("items");
       await context.sync();
 
       if (results.items.length === 0) {
         body.insertParagraph(
-          `CONSTRUTORA PORTO - |Pintura| Demarcação Viária| Forro Gípseos| Drywall| Quarta - ${hoje}`,
+          `Empresa construção - |Pintura| Demarcação Viária| Forro Gípseos| Drywall| ${diaSemana} - ${hoje}`,
           Word.InsertLocation.start
         );
         await context.sync();
