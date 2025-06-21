@@ -1,0 +1,7 @@
+<div>
+	<h2 id="cabecalhoSuperior">Cadastro ou atualização</h2>
+  <button id="btnCadastrar" type="button">Cadastrar</button>
+  <button id="btnAtualizar" type="button">Atualizar Pendências</button>
+	<div id="inlineForm"></div>
+  <div id="status" class="form-msg"></div>
+</div>
