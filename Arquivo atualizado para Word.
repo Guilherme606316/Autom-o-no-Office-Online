@@ -1,0 +1,296 @@
+Office.onReady(async (info) => {
+  if (info.host === Office.HostType.Word) {
+    // Passo 1: Preencher cabecalho automático se faltar
+    await Word.run(async (context) => {
+      const body = context.document.body;
+      const hoje = new Date().toLocaleDateString("pt-BR");
+      const diaSemanaRaw = new Date().toLocaleDateString("pt-BR", { weekday: "long" });
+      const diaSemana = diaSemanaRaw.charAt(0).toUpperCase() + diaSemanaRaw.slice(1);
+      const searchStart = `Status de Rotina Manutenção Preventiva - ${diaSemana} - ${hoje}`;
+      const searchStart2 = "PLANTONISTA: ";
+      const results1 = body.search(searchStart, { matchCase: false });
+      const results2 = body.search(searchStart2, { matchCase: false });
+      results1.load("items");
+      results2.load("items");
+      await context.sync();
+
+      if (results1.items.length === 0 && results2.items.length === 0) {
+        const form = document.getElementById("inlineForm");
+        form.innerHTML = `
+         <div class="form-group">
+           <label for="cad_nome">Nome:</label>
+           <datalist id="cad_nomes">
+             <option>HUGO</option>
+             <option>MARCOS</option>
+             <option>JOSE</option>
+             <option>LUIZ</option>
+           </datalist>
+           <input type="text" id="cad_nome" list="cad_nomes" />
+           <button id="cad_submit" type="button">Enviar</button>
+         <div>
+        `;
+
+        document.getElementById("cad_submit").onclick = async () => {
+          const nomeValor = document.getElementById("cad_nome").value.trim();
+          await Word.run(async (ctx) => {
+            const hoje = new Date().toLocaleDateString("pt-BR");
+            const diaSemanaRaw = new Date().toLocaleDateString("pt-BR", { weekday: "long" });
+            const diaSemana = diaSemanaRaw.charAt(0).toUpperCase() + diaSemanaRaw.slice(1);
+            const plantonista = `PLANTONISTA: ${nomeValor}`;
+            ctx.document.body.insertParagraph(plantonista, Word.InsertLocation.start);
+            ctx.document.body.insertParagraph("", Word.InsertLocation.start);
+            const cabecalho = `Status de Rotina Manutenção Preventiva - ${diaSemana} - ${hoje}`;
+            ctx.document.body.insertParagraph(cabecalho, Word.InsertLocation.start);
+            await ctx.sync();
+          });
+          document.getElementById("inlineForm").innerHTML = "";
+        };
+        await context.sync(); 
+      }
+    }).catch(console.error);
+
+    
+
+    // Passo 2: Atribuir handlers dos botões
+    document.getElementById("btnCadastrar").onclick = cadastrar;
+    document.getElementById("btnAtualizar").onclick = atualizarPendencias;
+
+    // Passo 3: Navegação por setas nos botões fixos
+    const fixedInputs = [document.getElementById("btnCadastrar"), document.getElementById("btnAtualizar")];
+    enableArrowNavigation(fixedInputs);
+  }
+});
+
+function formatarDataParaBR(dataISO) {
+  // dataISO: "2025-06-20"
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dataISO)) return dataISO;
+  const [ano, mes, dia] = dataISO.split("-");
+  return `${dia}/${mes}/${ano}`;
+}
+
+function showStatus(msg, isError = false) {
+  const st = document.getElementById("status");
+  st.textContent = msg;
+  st.style.color = isError ? "red" : "green";
+}
+
+function resetUI() {
+  const form = document.getElementById("inlineForm");
+  form.innerHTML = "";
+  document.getElementById("btnCadastrar").style.display = "";
+  document.getElementById("btnAtualizar").style.display = "";
+}
+
+function enableArrowNavigation(elements) {
+  elements.forEach((el, idx) => {
+    el.addEventListener("keydown", (e) => {
+      let target;
+      if (e.key === "ArrowDown") target = elements[idx + 1];
+      if (e.key === "ArrowUp") target = elements[idx - 1];
+      if (target) {
+        e.preventDefault();
+        target.focus();
+      }
+    });
+  });
+}
+
+function cadastrar() {
+  document.getElementById("btnAtualizar").style.display = "none";
+  const f = document.getElementById("inlineForm");
+  f.innerHTML = `
+    <div class="form-group">
+      <label for="cad_os">Numero de 3 digitos:</label>
+      <input type="text" id="cad_os" maxlength="3"/>
+      <button id="semNumero3" type="button">Sem número de 3 dígitos</button>
+    </div>
+    <div class="form-group">
+      <label for="numero">Número da preventiva/ 5 dígitos:</label>
+      <input type="text" id="numero" maxlength="5"/>
+      <button id="semNumero5" type="button">Sem número de 5 dígitos</button>
+    </div>
+    <div class="form-group">
+      <label for="local">Local:</label>
+      <input type="text" id="local"/>
+      <button id="semLocal" type="button">Sem local</button>
+    </div>
+    <div class="form-group">
+      <label for="vencimento">Vencimento:</label>
+      <input type="date" id="vencimento"/>
+      <button id="semVencimento" type="button">Sem vencimento</button>
+    </div>
+    <div class="form-group">
+      <label for="status">Status:</label>
+      <select id="status">
+        <option>A EXECUTAR</option>
+        <option>EXECUTADA</option>
+        <option>EM EXECUÇÃO</option>
+        <option>Sem status</option>
+      </select>
+    </div>
+
+    <button id="cad_submit" type="button">Enviar</button>
+    
+  `;
+
+  // Botões recusar
+  document.getElementById("semNumero3").onclick = () =>
+    (document.getElementById("cad_os").value = "Sem número de 3 dígitos");
+
+  document.getElementById("semNumero5").onclick = () =>
+    (document.getElementById("numero").value = "Sem número de 5 dígitos");
+
+  document.getElementById("semLocal").onclick = () => (document.getElementById("local").value = "Sem local");
+
+  document.getElementById("semVencimento").onclick = () =>
+    (document.getElementById("vencimento").value = "Sem vencimento");
+
+  enableArrowNavigation([
+    document.getElementById("cad_os"),
+    document.getElementById("semNumero3"),
+    document.getElementById("numero"),
+    document.getElementById("semNumero5"),
+    document.getElementById("local"),
+    document.getElementById("semLocal"),
+    document.getElementById("vencimento"),
+    document.getElementById("semVencimento"),
+    document.getElementById("status"),
+    document.getElementById("cad_submit")
+  ]);
+
+  document.getElementById("cad_submit").onclick = async () => {
+    const os = document.getElementById("cad_os").value.trim();
+    const numero = document.getElementById("numero").value.trim();
+    const local = document.getElementById("local").value.trim();
+    const vencimento = document.getElementById("vencimento").value.trim();
+    const status = document.getElementById("status").value.trim();
+    const vencimentoFormatado = vencimento ? formatarDataParaBR(vencimento) : "Sem vencimento";
+
+    await Word.run(async (ctx) => {
+      const body = ctx.document.body;
+      body.insertParagraph("", Word.InsertLocation.end);
+      body.insertParagraph(`#${os} – Rotina`, Word.InsertLocation.end);
+      body.insertParagraph("", Word.InsertLocation.end);
+      body.insertParagraph(`Preventiva: ${numero}`, Word.InsertLocation.end);
+      body.insertParagraph(`Local: ${local}`, Word.InsertLocation.end);
+      body.insertParagraph(`Vencimento: ${vencimentoFormatado}`, Word.InsertLocation.end);
+      body.insertParagraph(`Status: ${status}`, Word.InsertLocation.end);
+      await ctx.sync();
+    }).catch(console.error);
+
+    showStatus("Cadastrado!");
+    resetUI();
+  };
+}
+
+async function atualizarPendencias() {
+  document.getElementById("btnCadastrar").style.display = "none";
+  await Word.run(async (ctx) => {
+    const body = ctx.document.body;
+    const placeholders = [
+      "Sem número de 3 dígitos",
+      "Sem número de 5 dígitos",
+      "Sem local",
+      "Sem vencimento",
+      "Sem status"
+    ];
+
+    for (const ph of placeholders) {
+      await Word.run(async (ctx) => {
+        const results = ctx.document.body.search(ph, { matchCase: false });
+        results.load("items");
+        await ctx.sync();
+        if (results.items.length === 0) return;
+
+        for (const item of results.items) {
+          const ranges = item.getTextRanges(["\n"], false);
+          ranges.load("items");
+          await ctx.sync();
+          const text = ranges.items[0]?.text.trim() || "";
+
+          let html = "";
+
+          if (ph === "Sem vencimento") {
+            html = `
+            <div class="form-group">
+             <label>Preencha o campo de vencimento ou pule:</label>
+             <input type="date" id="upd_val" />
+             <button id="upd_ok"   type="button">OK</button>
+             <button id="upd_skip" type="button">Pular</button>
+            </div>
+          `;
+          } else if (ph === "Sem status") {
+            html = `
+            <div class="form-group">
+              <label for="status">Preencha o campo de status ou pule:</label>
+              <select id="upd_val">
+                <option>A EXECUTAR</option>
+                <option>EXECUTADA</option>
+                <option>EM EXECUÇÃO</option>
+                <option>Sem status</option>
+              </select>
+              <button id="upd_ok"   type="button">OK</button>
+              <button id="upd_skip" type="button">Pular</button>
+            </div>
+          `;
+          } else if (ph === "Sem número de 3 dígitos") {
+            html = `
+            <div class="form-group">
+              <label>Coloque um número de 3 dígitos ou pule:</label>
+              <input type="text" id="upd_val" maxlength="3">
+              <button id="upd_ok"   type="button">OK</button>
+              <button id="upd_skip" type="button">Pular</button>
+            </div>
+          `;
+          } else if (ph === "Sem número de 5 dígitos") {
+            html = `
+            <div class="form-group">
+              <label>Coloque um número de 5 dígitos ou pule:</label>
+              <input type="text" id="upd_val" maxlength="5">
+              <button id="upd_ok"   type="button">OK</button>
+              <button id="upd_skip" type="button">Pular</button>
+            </div>
+          `;
+        
+          } else {
+          html = `
+            <div class="form-group">
+            <label>Substituir "Sem local" ou pular:</label>
+            <input type="text" id="upd_val" />
+            <button id="upd_ok"   type="button">OK</button>
+            <button id="upd_skip" type="button">Pular</button>
+            </div>
+          `;
+        }
+
+          const f = document.getElementById("inlineForm");
+          f.innerHTML = html;
+
+          const ok = document.getElementById("upd_ok");
+          const skip = document.getElementById("upd_skip");
+          const val = document.getElementById("upd_val");
+          val.focus();
+
+          enableArrowNavigation([val, ok, skip]);
+
+          const answer = await new Promise((res) => {
+            ok.onclick = () => res(val.value.trim());
+            skip.onclick = () => res(null);
+          });
+
+          if (answer !== null && answer !== "") {
+            let valorInserir = answer;
+            // Se for vencimento, formata a data
+            if (ph === "Sem vencimento") {
+              valorInserir = formatarDataParaBR(answer);
+            }
+            item.insertText(valorInserir, Word.InsertLocation.replace);
+            await ctx.sync();
+          }
+        }
+      }).catch(console.error);
+    }
+    showStatus("Todas as pendências foram atualizadas.");
+    resetUI();
+  });
+}
